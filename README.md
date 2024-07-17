@@ -1,3 +1,8 @@
+# Querys de operaciones diarias.
+
+
+ ### Se tienen que pasar a Aldo.
+
 Query de los martes despues de comer.
 ``` SqlQuery
  -- Consulta que obtiene la cantidad de OP's generadas y la cantidad que deberian estar generadas
@@ -469,4 +474,219 @@ SELECT ctpa.nIdTipoPagareAutomatic,
        FROM db_besta_management_prod.dat_pagare_automatic AS dpa
        WHERE dpa.nIdTipoPagareAutomatic = ctpa.nIdTipoPagareAutomatic) AS nNumPagares
 FROM db_besta_management_prod.cat_tipo_pagare_automatic AS ctpa;
-    ```
+```
+
+EDGAR
+
+``` SqlQuery
+
+-- Query de ordenes que quieren estar pagadas pero no sale factura
+SELECT * FROM db_besta_management_prod.ops_orden_pago WHERE `bEnviadoFact` = 1 AND `nIdStatusOP` ORDER BY `nIdStatusOP` DESC;
+
+
+-- Facturas sin relaciÓn de OP arr. plan de pago, VR,  de Gastos notariales, pagare automatico
+SELECT
+df.*,
+oop.nIdOpsOP,
+odgn.nIdOpsGN,
+dpad.nIdPagareAutomaticDetalle
+
+FROM db_besta_management_prod.dat_facturas df
+
+LEFT JOIN db_besta_management_prod.ops_orden_pago oop
+ON oop.nIdFactura = df.nIdFactura
+AND oop.bActivo = 1
+
+LEFT JOIN db_besta_management_prod.ops_deposito_gastos_notariales odgn
+ON odgn.nIdFactura = df.nIdFactura
+AND odgn.bActivo = 1
+
+LEFT JOIN db_besta_management_prod.dat_pagare_automatic_detalle AS dpad
+ON dpad.nIdFactura = df.nIdFactura
+AND dpad.bActivo = 1
+
+WHERE
+df.bActivo = 1
+AND df.nIdStatusFactura NOT IN (3,4)
+AND oop.nIdOpsOP IS NULL
+AND odgn.nIdOpsGN IS NULL
+AND dpad.nIdFactura IS NULL
+AND YEAR(df.Date) = 2024
+
+AND df.nIdCliente NOT IN (1381) -- facturas son las OP que pidieron ayer que se inactivara del JESUS MARIA LOPEZ MAZZO, el cliente de Salvador que cayeron y le dieron otro carro, por eso no aparecen relacionadas
+;
+
+-- Consulta si existen complementos duplicados.
+SELECT
+    COUNT(*) AS nTotalComplemento,
+    nIdFactura,
+    `dFecRegistro`
+FROM
+    db_besta_management_prod.dat_complemento_pagos
+WHERE
+    bActivo = 1
+GROUP BY
+    `nIdFactura`
+HAVING
+    nTotalComplemento > 1 AND YEAR(dFecRegistro) = 2024
+ORDER BY
+    `dat_complemento_pagos`.`dFecRegistro` ASC;
+
+
+    -- Obtiene las OP sin pagar con factura pagada
+
+SELECT
+    df.nIdFactura,
+    oop.nIdOpsOP,    
+    oop.nIdPagoParcial,
+    oop.nIdArrendamiento,
+    oop.nIdProrroga,
+    oop.nIdPlanPago,
+    oop.nIdValorResidual,    
+    oop.nIdFactura,
+    	IFNULL(COALESCE(
+		dpagop.sReferenciaPaycash,
+		cop.sReferenciaPaycash,
+		dp.sReferenciaPaycash,
+		dplanp.sReferenciaPaycash,
+		cvr.sReferenciaPaycash
+		),'0') AS sReferenciaPaycash ,        
+        drpo.nIdOpPago,
+        (   SELECT  dpp.sReference FROM db_besta_management_prod.dat_pagos_paycash dpp
+			WHERE   dpp.nIdPagoPaycash = drpo.nIdPagoPaycash
+            AND dpp.bActivo = 1 LIMIT 1  ) AS sReferenciaPaycashPago,
+        (   SELECT  dpp.dDate FROM db_besta_management_prod.dat_pagos_paycash dpp
+			WHERE   dpp.nIdPagoPaycash = drpo.nIdPagoPaycash
+            AND dpp.bActivo = 1 LIMIT 1  ) AS dDatePago,
+        COUNT(dcp.nIdComplentoPago) AS nTotalComplemento,
+        oop.nIdStatusOp,
+        df.nIdStatusFactura
+            
+        
+FROM db_besta_management_prod.`dat_facturas` df
+
+        JOIN db_besta_management_prod.ops_orden_pago oop
+        ON oop.nIdFactura = df.nIdFactura
+        AND oop.bActivo = 1 
+        
+        LEFT JOIN db_besta_management_prod.dat_complemento_pagos dcp
+        ON dcp.nIdFactura = df.nIdFactura
+ 
+ 			LEFT JOIN db_besta_management_prod.dat_pago_parcial dpagop
+			ON dpagop.nIdPagoParcial = oop.nIdPagoParcial
+			
+			LEFT JOIN db_besta_management_prod.cfg_orden_pago cop
+			ON cop.nIdOrdenPago = oop.nIdArrendamiento		
+			AND cop.bActivo = 1
+            
+            LEFT JOIN db_besta_management_prod.dat_prorroga dp
+			ON dp.nIdProrroga = oop.nIdProrroga
+			
+			LEFT JOIN db_besta_management_prod.dat_plan_pago dplanp
+			ON dplanp.nIdPlanPago = oop.nIdPlanPago
+            
+            LEFT JOIN db_besta_management_prod.cfg_valor_residual cvr
+            ON cvr.nIdValorResidual = oop.nIdValorResidual
+            AND cvr.bActivo = 1
+							
+			LEFT JOIN db_besta_management_prod.dat_relacion_pagos_op drpo
+			ON drpo.nIdOrdenPago = oop.nIdOpsOP 
+            AND drpo.bActivo = 1
+            
+WHERE
+    df.bActivo = 1    
+    AND df.nIdStatusFactura = 2 /*Pagada*/
+    AND oop.nIdStatusOp != 2 /*Sin pagar*/
+GROUP BY df.nIdFactura ;
+
+-- Busca si una OP tiene mas de un pago relacionado.
+SELECT
+    COUNT(`nIdOrdenPago`) AS nTotal,
+    nIdOrdenPago,
+    GROUP_CONCAT(`nIdOpPago`) AS nIdsOpPago,
+    `nIdPagoPaycash`
+FROM
+    db_besta_management_prod.dat_relacion_pagos_op
+WHERE
+    `bActivo` = 1
+GROUP BY
+    `nIdOrdenPago`
+HAVING
+    nTotal > 1;
+
+ -- CONSULTA QUE OBTIENE LAS OP QUE ESTAN VENCIDAS SIN FACTURAR DE CLIENTES QUE NO ESTAN CAIDOS, EJECUTAR MARTES DESPUES DE LAS 12:00pm y Miércoles en la mañana. 
+SELECT
+	IF(dc.bFacturaPublicoGeneral = 1,'PUBLICO EN GENERAL','DATOS FISCALES CLIENTE')AS sTipoFacturacion,
+    oop.*
+FROM
+    db_besta_management_prod.ops_orden_pago oop
+    JOIN db_besta_management_prod.dat_cliente dc
+    ON dc.nIdCliente = oop.nIdCliente
+WHERE
+    oop.nIdStatusOp = 4 AND oop.nIdFactura = 0 AND oop.nIdCliente NOT IN
+    ( SELECT
+        nIdCliente
+    FROM
+        db_besta_management_prod.dat_cliente
+    WHERE
+        nIdStatusCliente = 7 AND bActivo = 1
+	);
+
+-- Facturas de gastos notariales sin generar
+SELECT
+    odgn.nIdOpsGN,
+    odgn.nIdCliente,
+    CONCAT(dc.sNombre,' ',dc.sApellidoP,' ',dc.sApellidoM) AS  sNombreCliente	,
+    odgn.sReferenciaPaycash,
+    SUBSTRING(odgn.dFecRegistro,1,10) AS dFecha,
+    SUBSTRING(odgn.dFecRegistro,12,9) AS dHora
+FROM
+    db_besta_management_prod.`ops_deposito_gastos_notariales` odgn
+    JOIN db_besta_management_prod.dat_cliente dc
+	ON dc.nIdCliente = odgn.nIdCliente 
+	AND dc.bActivo = 1  
+WHERE
+    odgn.`nIdFactura` IS NULL AND odgn.`nIdStatusOp` = 2
+ORDER BY
+    odgn.`nIdFactura` ASC;
+
+-- Gastos notariales sin relacion de pago (Revision de factura)
+SELECT
+    odgn.*,drpogn.nIdOpPagoGN 
+FROM
+    db_besta_management_prod.ops_deposito_gastos_notariales odgn
+LEFT JOIN db_besta_management_prod.dat_relacion_pagos_op_gastos_notariales drpogn
+ON drpogn.nIdOpsGN = odgn.nIdOpsGN
+AND drpogn.bActivo = 1
+WHERE
+    odgn.nIdStatusOp = 2 -- Pagado
+    AND odgn.bActivo = 1
+    AND drpogn.nIdOpPagoGN IS NULL;
+
+-- Consulta para obtener usuarios sin idcliente
+
+SELECT * FROM db_besta_management_prod.dat_usuarios WHERE `nIdTipoUsuario` = 2 AND `nIdCliente` IS NULL;
+
+-- Consulta que obtiene las OPs de VR que no se han conciliado
+SELECT dpp.*
+FROM db_besta_management_prod.dat_pagos_paycash dpp
+    LEFT JOIN db_besta_management_prod.dat_relacion_pagos_op dro
+    ON dro.nIdPagoPaycash = dpp.nIdPagoPaycash
+    AND dro.bActivo = 1
+	
+	
+WHERE dpp.bActivo = 1
+AND dro.nIdOpPago IS NULL
+AND dpp.sReference IN (SELECT sReferenciaPaycash FROM db_besta_management_prod.`cfg_valor_residual` WHERE  bActivo = 1 AND dFecVencimiento >= '2024-01-01' )
+;
+
+
+-- Consulta para buscar un texto dentro de PS´S y Funciones: 
+SELECT  ROUTINE_NAME
+FROM information_schema.routines 
+WHERE routine_definition LIKE '%hst_dat_activo_cliente%' 
+ORDER BY routine_name;
+
+-- Consulta para obtener pagos realizados en el mismo día
+SELECT *,COUNT(dDate) AS TOTAL FROM db_besta_management_prod.dat_pagos_paycash WHERE dDate >= '2024-06-25' GROUP BY sReference,dDate HAVING TOTAL > 1; 
+``` 
