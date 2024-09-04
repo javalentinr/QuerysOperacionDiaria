@@ -690,3 +690,12 @@ ORDER BY routine_name;
 -- Consulta para obtener pagos realizados en el mismo día
 SELECT *,COUNT(dDate) AS TOTAL FROM db_besta_management_prod.dat_pagos_paycash WHERE dDate >= '2024-06-25' GROUP BY sReference,dDate HAVING TOTAL > 1; 
 ``` 
+
+
+### HASH DE CONTRASENA
+
+Para password de enterprise.
+
+``` SqlQuery
+    SELECT SHA1(CONCAT("B3st42023#", "Ceniceros1967"))
+``` 
