@@ -511,7 +511,7 @@ AND df.nIdStatusFactura NOT IN (3,4)
 AND oop.nIdOpsOP IS NULL
 AND odgn.nIdOpsGN IS NULL
 AND dpad.nIdFactura IS NULL
-AND YEAR(df.Date) = 2024
+AND YEAR(df.Date) = 2025
 
 AND df.nIdCliente NOT IN (1381) -- facturas son las OP que pidieron ayer que se inactivara del JESUS MARIA LOPEZ MAZZO, el cliente de Salvador que cayeron y le dieron otro carro, por eso no aparecen relacionadas
 ;
@@ -528,7 +528,7 @@ WHERE
 GROUP BY
     `nIdFactura`
 HAVING
-    nTotalComplemento > 1 AND YEAR(dFecRegistro) = 2024
+    nTotalComplemento > 1 AND YEAR(dFecRegistro) = 2025
 ORDER BY
     `dat_complemento_pagos`.`dFecRegistro` ASC;
 
@@ -677,7 +677,7 @@ FROM db_besta_management_prod.dat_pagos_paycash dpp
 	
 WHERE dpp.bActivo = 1
 AND dro.nIdOpPago IS NULL
-AND dpp.sReference IN (SELECT sReferenciaPaycash FROM db_besta_management_prod.`cfg_valor_residual` WHERE  bActivo = 1 AND dFecVencimiento >= '2024-01-01' )
+AND dpp.sReference IN (SELECT sReferenciaPaycash FROM db_besta_management_prod.`cfg_valor_residual` WHERE  bActivo = 1 AND dFecVencimiento >= '2026-01-01' )
 ;
 
 
@@ -688,7 +688,7 @@ WHERE routine_definition LIKE '%hst_dat_activo_cliente%'
 ORDER BY routine_name;
 
 -- Consulta para obtener pagos realizados en el mismo día
-SELECT *,COUNT(dDate) AS TOTAL FROM db_besta_management_prod.dat_pagos_paycash WHERE dDate >= '2024-06-25' GROUP BY sReference,dDate HAVING TOTAL > 1; 
+SELECT *,COUNT(dDate) AS TOTAL FROM db_besta_management_prod.dat_pagos_paycash WHERE dDate >= '2025-06-25' GROUP BY sReference,dDate HAVING TOTAL > 1; 
 ``` 
 
 
