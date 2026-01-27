@@ -1,41 +1,30 @@
-#Revisar ops 
+#Revisar ops que no se generaron del lunes
 
-SELECT dc.nIdCliente, 
-	CONCAT(dc.sNombre,' ',dc.sApellidoP,' ',dc.sApellidoM) AS  sNombreCliente,
-	dc.nIdStatusCliente,
-	oop.nIdOpsOP,
-	oop.nIdStatusOp
-FROM db_besta_management_prod.dat_cliente dc 
-	LEFT JOIN db_besta_management_prod.ops_orden_pago oop
-		ON oop.nIdCliente = dc.nIdCliente
-		 	AND oop.dFecVencimiento = "2025-10-20 00:00:00"
-			AND oop.bActivo = 1  
-WHERE dc.nIdStatusCliente IN(2,3,4,9)
-	AND dc.bActivo = 1
-	AND dc.dFechaInicio <= DATE_FORMAT(NOW(), '%Y-%m-%d')
-	AND dc.dFechaVencimiento >= DATE_FORMAT(NOW(), '%Y-%m-%d')
-	;
+<pre>
+SELECT 
+dc.nIdCliente, CONCAT(dc.sNombre,' ',dc.sApellidoP,' ',dc.sApellidoM) AS sNombreCliente, dc.nIdStatusCliente, dc.dFechaInicio, oop.nIdOpsOP, oop.nIdStatusOp
+FROM db_besta_management_prod.dat_cliente dc
+LEFT JOIN db_besta_management_prod.ops_orden_pago oop 
+	ON oop.nIdCliente = dc.nIdCliente AND oop.dFecVencimiento = CAST(CURDATE() - INTERVAL 1 DAY AS DATETIME) AND oop.bActivo = 1
+WHERE dc.nIdStatusCliente IN(2,3,4,9) 
+AND dc.bActivo = 1 AND dc.dFechaInicio <= DATE_FORMAT(NOW(), '%Y-%m-%d') AND dc.dFechaVencimiento >= DATE_FORMAT(NOW(), '%Y-%m-%d')
+AND oop.nIdOpsOP IS null
+</pre>
 
 
-#Revisar ops plan de pagos
+#Revisar ops plan de pagos que no se generaron del lunes
 
-SELECT dc.nIdCliente, 
-	CONCAT(dc.sNombre,' ',dc.sApellidoP,' ',dc.sApellidoM) AS  sNombreCliente,
-	dc.nIdStatusCliente,
-	oop.nIdOpsOP,
-	(SELECT dpp.dFecVencimiento FROM db_besta_management_prod.dat_plan_pago dpp
-		WHERE dpp.nIdCliente = dc.nIdCliente
-			AND dpp.bActivo = 1
-			AND dpp.nIdStatusPlanPago = 1
-	ORDER BY dpp.dFecVencimiento DESC LIMIT 1) AS PlanPagoDFecVencimiento
-	
-FROM db_besta_management_prod.dat_cliente dc 
-	LEFT JOIN db_besta_management_prod.ops_orden_pago oop
-		ON oop.nIdCliente = dc.nIdCliente
-		 	AND oop.dFecVencimiento = "2025-10-20 00:00:00"
-			AND oop.bActivo = 1  
-WHERE dc.nIdStatusCliente IN(/*2,3,*/4/*,9*/)
-	AND dc.bActivo = 1
-	AND dc.dFechaInicio <= DATE_FORMAT(NOW(), '%Y-%m-%d')
-	AND dc.dFechaVencimiento >= DATE_FORMAT(NOW(), '%Y-%m-%d')
-	;
+<pre>
+SELECT 
+dc.nIdCliente, CONCAT(dc.sNombre,' ',dc.sApellidoP,' ',dc.sApellidoM) AS sNombreCliente, dc.nIdStatusCliente, dc.dFechaInicio, oop.nIdOpsOP, (
+	SELECT dpp.dFecVencimiento
+	FROM db_besta_management_prod.dat_plan_pago dpp
+	WHERE dpp.nIdCliente = dc.nIdCliente AND dpp.bActivo = 1 AND dpp.nIdStatusPlanPago = 1
+	ORDER BY dpp.dFecVencimiento DESC
+	LIMIT 1
+) AS PlanPagoDFecVencimiento
+FROM db_besta_management_prod.dat_cliente dc
+LEFT JOIN db_besta_management_prod.ops_orden_pago oop ON oop.nIdCliente = dc.nIdCliente AND oop.dFecVencimiento = CAST(CURDATE() - INTERVAL 1 DAY AS DATETIME) AND oop.bActivo = 1
+WHERE dc.nIdStatusCliente IN(4) AND dc.bActivo = 1 AND dc.dFechaInicio <= DATE_FORMAT(NOW(), '%Y-%m-%d') AND dc.dFechaVencimiento >= DATE_FORMAT(NOW(), '%Y-%m-%d') 
+AND oop.nIdOpsOP IS null;
+</pre>
