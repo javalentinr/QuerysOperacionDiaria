@@ -37,3 +37,14 @@ CALL  sp_update_comprobante_prospecto(603,2, 'AVAL- PROSP','Nombre cliente','Cal
 	IN `PO_sTipo` VARCHAR(10),
 	IN `PO_sNombre` VARCHAR(80),
 	IN `PO_sCalle` VARCHAR(150)
+
+
+
+Validacion manual Licencia
+
+CALL  sp_update_licencia_prospecto(5061,'2028-03-11', 2,'JOSE EDUARDO ARREDONDO SANDOVAL');
+
+	IN `PO_nIdUsuario` INT,
+	IN `PO_dFechaVigencia` VARCHAR(10),
+	IN `PO_nIdStatusDocumento` INT,
+	IN `PO_sNombre` VARCHAR(250)
