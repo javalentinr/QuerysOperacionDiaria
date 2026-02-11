@@ -195,23 +195,16 @@ HAVING
 
 -- CONSULTA QUE OBTIENE LAS OP QUE ESTAN VENCIDAS SIN FACTURAR DE CLIENTES QUE NO ESTAN CAIDOS, EJECUTAR MARTES DESPUES DE LAS 12:00pm y Miércoles en la mañana.
 
-SELECT
-    IF(dc.bFacturaPublicoGeneral = 1,'PUBLICO EN GENERAL','DATOS FISCALES CLIENTE')AS sTipoFacturacion,
-    oop.*
-FROM
-    db_besta_management_prod.ops_orden_pago oop
-    JOIN db_besta_management_prod.dat_cliente dc
-    ON dc.nIdCliente = oop.nIdCliente
-WHERE
-    oop.nIdStatusOp = 4 AND oop.nIdFactura = 0 AND oop.nIdCliente NOT IN
-    ( SELECT
-        nIdCliente
-    FROM
-        db_besta_management_prod.dat_cliente
-    WHERE
-        nIdStatusCliente = 7 AND bActivo = 1
-    )
-	 AND oop.bActivo = 1 ;
+<pre>
+SELECT IF(dc.bFacturaPublicoGeneral = 1,'PUBLICO EN GENERAL','DATOS FISCALES CLIENTE') AS sTipoFacturacion, oop.*
+FROM db_besta_management_prod.ops_orden_pago oop
+JOIN db_besta_management_prod.dat_cliente dc ON dc.nIdCliente = oop.nIdCliente
+WHERE oop.nIdStatusOp = 4 AND oop.nIdFactura = 0 AND oop.nIdCliente NOT IN (
+SELECT nIdCliente
+FROM db_besta_management_prod.dat_cliente
+WHERE nIdStatusCliente = 7 AND bActivo = 1) AND oop.bActivo = 1 
+and dc.bGeneraFactura=1;
+</pre>
 
 
 
