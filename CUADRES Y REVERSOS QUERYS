@@ -4,7 +4,9 @@ Este documento contiene las consultas necesarias para identificar discrepancias 
 1. Operaciones de Pagarés con Reversos
 Objetivo: Identificar pagarés conciliados cuyos pagos asociados han sido marcados como refunded (reembolsados).
 
+<pre>
 /* Query para saber si tenemos ops de pagarés conciliados con pagos que tienen reversos */
+
 SELECT
     dpad.nIdPagareAutomaticDetalle,
     drppa.nIdPagoPaycash,
@@ -19,13 +21,14 @@ JOIN db_besta_management_prod.dat_pagos_paycash dpp
 JOIN db_besta_management_prod.hst_payments hp
     ON hp.sIdPayment = dpp.nPaymentId;
 
+</pre>
 
 [!IMPORTANT] Acción requerida: Descargar el resultado, filtrar la columna sRefunded. Si el valor es true, existe una inconsistencia que debe ser reportada.
 
 2. Operaciones de Semana con Reversos
 Objetivo: Monitorear reversos en operaciones semanales. Correr este reporte desde el día 1 del mes en curso.
 
-
+<pre>
 /* Query para saber si tenemos ops de semana conciliados con pagos que tienen reversos */
 SELECT
     oop.nIdOpsOP,
@@ -40,7 +43,7 @@ JOIN db_besta_management_prod.dat_pagos_paycash dpp
     ON dpp.nIdPagoPaycash = drpo.nIdPagoPaycash
 JOIN db_besta_management_prod.hst_payments hp
     ON hp.sIdPayment = dpp.nPaymentId;
-
+</pre>
 
 
 
