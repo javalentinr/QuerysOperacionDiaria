@@ -565,6 +565,7 @@ HAVING counter > 1
 
 
 -- Se corrre los lunes y se le  pasa a Ceci  solo los primero 6 campos. Siempre le digo  : Hola buenos días    le comparto esta info de los clientes que se pueden caer  
+(YA NO se ejecutara)
    /*******************************************************************************
 
 
@@ -606,7 +607,7 @@ HAVING counter > 1
     ********************************************************************************/
  
 -- Estaditas extras
- 
+<pre>
     SELECT T1.*,
  
            (SELECT CONCAT_WS(' ',dc.sNombre,dc.sApellidoP,dc.sApellidoM)  FROM db_besta_management_prod.dat_cliente AS dc WHERE nIdCliente =  T1.nIdCliente) AS sNombreCompleto,
@@ -936,11 +937,12 @@ HAVING counter > 1
 
 
                AND nIdStatusPagareAutomatic = 5) AS T1 LEFT JOIN db_besta_management_prod.dat_cliente AS dc ON T1.nIdCliente = dc.nIdCliente WHERE dc.nIdStatusCliente != 7;
-
+</pre>
 
 
 -- UNIDADES CARGADAS EN ENTERPRISE QUE AUN NO LLEGAN A BM
 
+<pre>
 SELECT csaif.sNombre AS sStatusFactura,daif.* FROM db_besta_management_prod.dat_activo_info_factura daif 
 JOIN db_besta_management_prod.cat_status_activo_info_factura csaif
 ON csaif.nIdStatusActInfFac = daif.nIdStatusActInfFac
@@ -949,11 +951,11 @@ ON da.nIdActivo = daif.nIdActivo
 WHERE daif.bActivo = 1
 AND (da.nIdActivo IS NULL  OR daif.nIdActivo IS NULL)
 ORDER BY `daif`.`nIdActInfFac` ASC;
-
-
+</pre>
 
 -- Ops Pagaré automático pagadas sin factura
  
+<pre>
 SELECT dpa.nIdPagareAutomatic,ctpa.sNombre ,dpad.*
  
 FROM db_besta_management_prod.dat_pagare_automatic dpa
@@ -970,3 +972,10 @@ AND dpad.nIdStatusOp = 2
 AND dpa.nIdTipoPagareAutomatic != 10
  
 WHERE dpa.bActivo = 1 ;
+</pre>
+
+
+-- Obtiene los leads que en el correo Empieza con espacio/salto de línea o Termina con espacio/salto de línea
+<pre>
+SELECT * FROM `dat_lead` WHERE `eCorreo` REGEXP '^[[:space:]]' OR eCorreo REGEXP '[[:space:]]$';
+</pre>
